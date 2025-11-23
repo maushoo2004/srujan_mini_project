@@ -132,7 +132,7 @@ export default function SafetyCoach() {
   ];
 
   return (
-    <div className="h-screen bg-black">
+    <div className="min-h-screen bg-black">
       {/* Navigation */}
       <nav className="bg-gradient-to-r from-gray-900 via-black to-gray-900 shadow-lg shadow-yellow-500/10 border-b border-yellow-500/30 animate-slideInUp">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -160,10 +160,10 @@ export default function SafetyCoach() {
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-full mx-auto px-8 py-6">
+      <div className="max-w-auto mx-auto px-8 py-6">
         <div
-          className="bg-gradient-to-br from-gray-900 to-black rounded-lg shadow-xl shadow-purple-500/10 overflow-hidden border border-purple-500/30 animate-scaleIn hover:shadow-purple-500/20 transition-shadow duration-500"
-          style={{ height: "calc(100vh - 140px)" }}
+          className="bg-gradient-to-br from-gray-900 to-black rounded-lg shadow-xl shadow-purple-500/10 border border-purple-500/30 animate-scaleIn hover:shadow-purple-500/20 transition-shadow duration-500 flex flex-col"
+          style={{ minHeight: "calc(100vh - 260px)", maxHeight: "none" }}
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-900 via-purple-800 to-pink-900 p-6 border-b border-yellow-500/30">
@@ -193,7 +193,7 @@ export default function SafetyCoach() {
           {/* Chat Messages */}
           <div
             className="flex-1 overflow-y-auto p-8 space-y-6 bg-black"
-            style={{ height: "calc(100% - 260px)" }}
+            style={{ minHeight: "400px" }}
           >
             {messages.map((msg, idx) => (
               <div
