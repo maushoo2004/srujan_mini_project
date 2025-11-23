@@ -638,7 +638,7 @@ export function classifyRisk(url) {
   }
 
   // MEDIUM: Executable files, archives, and suspicious file types
-  // Only flag if it's actually a download URL, not just containing the extension
+  // Check if URL contains these extensions (not just ends with)
   const mediumRiskExtensions = [
     // Executable files
     ".exe",
@@ -695,12 +695,12 @@ export function classifyRisk(url) {
     ".rpm",
   ];
 
-  // Check if URL actually ends with these extensions (actual file downloads)
+  // Check if URL contains these extensions anywhere in the path
+  const pathPart = urlLower.split("?")[0].split("#")[0];
   if (
     mediumRiskExtensions.some((ext) => {
-      // Check if it's at the end of the path (before query params)
-      const pathPart = urlLower.split("?")[0].split("#")[0];
-      return pathPart.endsWith(ext);
+      // Check if extension appears in the URL path (not just at the end)
+      return pathPart.includes(ext);
     })
   ) {
     return "medium";
@@ -708,29 +708,35 @@ export function classifyRisk(url) {
 
   // Additional medium risk patterns (check only if not already flagged as low)
   const mediumRiskPatterns = [
-    "/download-now",
-    "/instant-download",
-    "/click-download",
-    "/torrent/",
-    "/warez/",
-    "/cracked/",
-    "/nulled/",
-    "/crack/",
-    // URL shorteners (full patterns with protocol)
-    "://bit.ly/",
-    "://tinyurl.com/",
-    "://goo.gl/",
-    "://t.co/",
-    "://ow.ly/",
-    "://is.gd/",
-    "://buff.ly/",
-    "://adf.ly/",
+    "/download",
+    "download.",
+    "/install",
+    "/setup",
+    "/crack",
+    "/torrent",
+    "/warez",
+    "/nulled",
+    // URL shorteners
+    "bit.ly",
+    "tinyurl.com",
+    "goo.gl",
+    "t.co",
+    "ow.ly",
+    "is.gd",
+    "buff.ly",
+    "adf.ly",
     // Suspicious redirects
-    "/redirect.php",
-    "/goto.php",
-    "/out.php",
-    "/click.php",
-    "/track.php",
+    "redirect",
+    "goto.php",
+    "out.php",
+    "click.php",
+    "track.php",
+    // File sharing sites (can host malware)
+    "mediafire",
+    "mega.nz",
+    "4shared",
+    "rapidgator",
+    "uploaded.net",
     // Adult content
     "/xxx/",
     "/adult/",
