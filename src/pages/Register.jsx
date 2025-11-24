@@ -5,6 +5,7 @@ import logo from "../assets/srujan_logo.png";
 
 export default function Register() {
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -26,10 +27,20 @@ export default function Register() {
       return;
     }
 
+    // Strip any +91- or +91 prefix from phone number
+    const cleanPhone = phoneNumber.replace(/^\+?91-?/, "").trim();
+
+    if (!cleanPhone || cleanPhone.length < 10) {
+      setError("Please enter a valid phone number (at least 10 digits)");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await signUp(email, password);
+      await signUp(email, password, cleanPhone);
+      // Store phone number in localStorage for SMS features
+      localStorage.setItem("userPhoneNumber", cleanPhone);
       navigate("/home");
     } catch (err) {
       setError(err.message || "Failed to create account");
@@ -81,6 +92,20 @@ export default function Register() {
 
           <div className="animate-slideInLeft stagger-2">
             <label className="block text-yellow-400 font-medium mb-2">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-900 border border-purple-500/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:scale-[1.02] text-white placeholder-gray-500 transition-all duration-300 hover:border-purple-500/70"
+              placeholder="9876543210"
+              required
+            />
+          </div>
+
+          <div className="animate-slideInLeft stagger-3">
+            <label className="block text-yellow-400 font-medium mb-2">
               Password
             </label>
             <input
@@ -93,7 +118,7 @@ export default function Register() {
             />
           </div>
 
-          <div className="animate-slideInLeft stagger-3">
+          <div className="animate-slideInLeft stagger-4">
             <label className="block text-yellow-400 font-medium mb-2">
               Confirm Password
             </label>
@@ -110,13 +135,13 @@ export default function Register() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-lg font-medium hover:shadow-xl hover:shadow-purple-500/60 transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed animate-slideInUp stagger-4"
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-lg font-medium hover:shadow-xl hover:shadow-purple-500/60 transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed animate-slideInUp stagger-5"
           >
             {loading ? "Creating account..." : "Sign Up"}
           </button>
         </form>
 
-        <p className="text-center text-gray-400 mt-6 animate-slideInUp stagger-5">
+        <p className="text-center text-gray-400 mt-6 animate-slideInUp stagger-6">
           Already have an account?{" "}
           <Link
             to="/login"

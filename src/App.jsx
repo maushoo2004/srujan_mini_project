@@ -11,6 +11,9 @@ import Home from "./pages/Home";
 import ActivityMonitor from "./pages/ActivityMonitor";
 import Dashboard from "./pages/Dashboard";
 import SafetyCoach from "./pages/SafetyCoach";
+import ScammerConsole from "./pages/ScammerConsole";
+import Inbox from "./pages/Inbox";
+import FlaggedSMS from "./pages/FlaggedSMS";
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -91,6 +94,30 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <SafetyCoach />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/scammer"
+        element={
+          <ProtectedRoute>
+            <ScammerConsole />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/inbox"
+        element={
+          <ProtectedRoute>
+            <Inbox />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/flagged"
+        element={
+          <ProtectedRoute>
+            <FlaggedSMS />
           </ProtectedRoute>
         }
       />

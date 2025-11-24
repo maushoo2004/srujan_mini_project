@@ -24,10 +24,15 @@ export function UserProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email, password) => {
+  const signUp = async (email, password, phoneNumber) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          phone_number: phoneNumber,
+        },
+      },
     });
     if (error) throw error;
     return data;

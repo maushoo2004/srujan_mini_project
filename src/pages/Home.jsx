@@ -24,10 +24,13 @@ export default function Home() {
     weekScans: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [inboxCount, setInboxCount] = useState(0);
+  const [dangerousCount, setDangerousCount] = useState(0);
 
   useEffect(() => {
     setSafetyTip(getRandomSafetyTip());
     fetchActivityStats();
+    fetchMessageCounts();
   }, [user]);
 
   const fetchActivityStats = async () => {
@@ -59,6 +62,44 @@ export default function Home() {
       console.error("Error fetching activity stats:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessageCounts = async () => {
+    try {
+      // First get user's phone number
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("phone_number")
+        .eq("id", user.id)
+        .single();
+
+      if (userError) throw userError;
+
+      // Count safe messages using correct column name: receiver_number
+      const { data: safeData, error: safeError } = await supabase
+        .from("sms_messages")
+        .select("id")
+        .eq("receiver_number", userData.phone_number)
+        .eq("risk_level", "safe");
+
+      if (safeError) throw safeError;
+
+      // Count dangerous messages
+      const { data: dangerousData, error: dangerousError } = await supabase
+        .from("sms_messages")
+        .select("id")
+        .eq("receiver_number", userData.phone_number)
+        .eq("risk_level", "dangerous");
+
+      if (dangerousError) throw dangerousError;
+
+      setInboxCount(safeData?.length || 0);
+      setDangerousCount(dangerousData?.length || 0);
+    } catch (error) {
+      console.error("Error fetching message counts:", error);
+      setInboxCount(0);
+      setDangerousCount(0);
     }
   };
 
@@ -147,9 +188,68 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
+        {/* SMS Message Counters */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          {/* Safe Inbox Counter */}
+          <div
+            className="bg-gradient-to-br from-green-950/50 to-emerald-950/50 rounded-lg shadow-xl shadow-green-500/20 p-6 border-2 border-green-500/50 animate-slideInLeft hover:shadow-green-500/30 hover:scale-105 transition-all duration-300 cursor-pointer"
+            onClick={() => navigate("/inbox")}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-5xl animate-float">📬</span>
+                <div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 bg-clip-text text-transparent">
+                    Safe Messages
+                  </h3>
+                  <p className="text-green-300 text-sm">
+                    Click to view your inbox
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-5xl font-bold text-green-400 animate-pulse">
+                  {inboxCount}
+                </div>
+                <div className="text-sm text-green-300 font-medium">
+                  {inboxCount === 1 ? "Message" : "Messages"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dangerous/Flagged Counter */}
+          <div
+            className="bg-gradient-to-br from-red-950/50 to-orange-950/50 rounded-lg shadow-xl shadow-red-500/20 p-6 border-2 border-red-500/50 animate-slideInRight hover:shadow-red-500/30 hover:scale-105 transition-all duration-300 cursor-pointer"
+            onClick={() => navigate("/flagged-sms")}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-5xl animate-bounce">🚨</span>
+                <div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-red-400 via-orange-400 to-red-500 bg-clip-text text-transparent">
+                    Flagged Messages
+                  </h3>
+                  <p className="text-red-300 text-sm">
+                    Dangerous scam attempts
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-5xl font-bold text-red-400 animate-pulse">
+                  {dangerousCount}
+                </div>
+                <div className="text-sm text-red-300 font-medium">
+                  {dangerousCount === 1 ? "Threat" : "Threats"}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-gradient-to-br from-gray-900 to-black rounded-lg shadow-xl shadow-yellow-500/10 p-8 mb-8 border border-yellow-500/30 animate-scaleIn hover:shadow-yellow-500/20 transition-shadow duration-500">
           <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 bg-clip-text text-transparent mb-4 animate-slideInLeft">
-            Welcome back, {user?.email?.split("@")[0]}! 👋
+            Welcome, {user?.email?.split("@")[0]}! 👋
           </h2>
           <p className="text-gray-400 text-lg animate-slideInLeft stagger-1">
             Your digital security companion is ready to protect you.
@@ -435,7 +535,7 @@ export default function Home() {
 
           {/* AI Safety Coach Card */}
           <div
-            className="bg-gradient-to-br from-gray-900 to-black rounded-lg shadow-xl shadow-purple-500/10 p-8 hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2 cursor-pointer md:col-span-2 border border-purple-500/30 animate-slideInUp stagger-4"
+            className="bg-gradient-to-br from-gray-900 to-black rounded-lg shadow-xl shadow-purple-500/10 p-8 hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2 cursor-pointer border border-purple-500/30 animate-slideInUp stagger-4"
             onClick={() => navigate("/safety-coach")}
           >
             <div className="flex items-center justify-between mb-4">
@@ -450,6 +550,66 @@ export default function Home() {
             </p>
             <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:shadow-xl hover:shadow-purple-500/60 transition-all duration-300 hover:scale-105">
               Get AI Advice
+            </button>
+          </div>
+
+          {/* SMS Inbox Card */}
+          <div
+            className="bg-gradient-to-br from-gray-900 to-black rounded-lg shadow-xl shadow-green-500/10 p-8 hover:shadow-2xl hover:shadow-green-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2 cursor-pointer border border-green-500/30 animate-slideInLeft stagger-5"
+            onClick={() => navigate("/inbox")}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                SMS Inbox
+              </h3>
+              <span className="text-4xl animate-float">📬</span>
+            </div>
+            <p className="text-gray-400 mb-6">
+              Real-time SMS monitoring with AI-powered scam detection. Safe
+              messages appear here.
+            </p>
+            <button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-lg font-medium hover:shadow-xl hover:shadow-green-500/60 transition-all duration-300 hover:scale-105">
+              View Inbox
+            </button>
+          </div>
+
+          {/* Flagged SMS Card */}
+          <div
+            className="bg-gradient-to-br from-gray-900 to-black rounded-lg shadow-xl shadow-red-500/10 p-8 hover:shadow-2xl hover:shadow-red-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2 cursor-pointer border border-red-500/30 animate-slideInRight stagger-6"
+            onClick={() => navigate("/flagged")}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent">
+                Flagged SMS
+              </h3>
+              <span className="text-4xl animate-float">⚠️</span>
+            </div>
+            <p className="text-gray-400 mb-6">
+              Review suspicious and dangerous messages detected by AI. Stay
+              protected from SMS scams.
+            </p>
+            <button className="w-full bg-gradient-to-r from-red-500 to-orange-600 text-white py-3 rounded-lg font-medium hover:shadow-xl hover:shadow-red-500/60 transition-all duration-300 hover:scale-105">
+              View Flagged
+            </button>
+          </div>
+
+          {/* Scammer Console Card (Testing) */}
+          <div
+            className="bg-gradient-to-br from-gray-900 to-black rounded-lg shadow-xl shadow-orange-500/10 p-8 hover:shadow-2xl hover:shadow-orange-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2 cursor-pointer md:col-span-2 border border-orange-500/30 animate-slideInUp stagger-7"
+            onClick={() => navigate("/scammer")}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+                SMS System Console (Testing)
+              </h3>
+              <span className="text-4xl animate-float">📱</span>
+            </div>
+            <p className="text-gray-400 mb-6">
+              Simulate SMS messages for testing the AI detection system. See how
+              scams are caught in real-time.
+            </p>
+            <button className="w-full bg-gradient-to-r from-orange-500 to-red-600 text-white py-3 rounded-lg font-medium hover:shadow-xl hover:shadow-orange-500/60 transition-all duration-300 hover:scale-105">
+              Open Console
             </button>
           </div>
         </div>
